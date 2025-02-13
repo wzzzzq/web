@@ -4,20 +4,23 @@ from flask_cors import CORS
 app = Flask(__name__, template_folder="templates")  # Ensure Flask looks in the "templates" folder
 CORS(app)  # Allow requests from other devices
 
-# ✅ Add a route for "/"
+messages = []  # Store all received messages
+
+# ✅ Homepage route
 @app.route('/')
 def index():
-    return render_template('index.html')  # Serve the HTML page
+    return render_template('index.html', messages=messages)  # Pass messages to the template
 
+# ✅ Handle incoming messages
 @app.route('/send-message', methods=['POST'])
 def handle_message():
     data = request.get_json()
     user_message = data.get("message")
 
-    print(f"Received message: {user_message}")
-
     if not user_message:
         return jsonify({"error": "No message provided"}), 400
+
+    messages.append(user_message)  # Store message
 
     response_message = f"Server received: {user_message}"
     return jsonify({"response": response_message})
