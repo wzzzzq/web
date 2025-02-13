@@ -1,41 +1,104 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat Messages</title>
-    <script>
-        async function sendMessage() {
-            let message = document.getElementById("messageInput").value;
-            if (message.trim() === "") return;
+    <title>消息系统</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+        #container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 50%;
+            margin: auto;
+        }
+        #input-container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            margin-bottom: 10px; /* 让输入框和消息之间有间距 */
+        }
+        #message-input {
+            flex: 1;
+            padding: 10px;
+        }
+        #send-btn {
+            padding: 10px 15px;
+            background-color: red;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #chat-container {
+            width: 100%;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+            max-height: 300px;
+            overflow-y: auto;
+            background-color: #f9f9f9;
+        }
+        .message {
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
+        }
+        #heart {
+            font-size: 30px;
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
 
-            // Send message to backend
-            let response = await fetch("/send-message", {
+    <!-- 你的本地图片 -->
+    <img src="{{ url_for('static', filename='my_image.jpg') }}" alt="图片" width="200">
+    
+    <!-- 爱心 -->
+    <div id="heart">❤️</div>
+    <p>我爱小熊宝宝</p>
+
+    <div id="container">
+        <!-- 输入框（上方） -->
+        <div id="input-container">
+            <input type="text" id="message-input" placeholder="输入消息...">
+            <button id="send-btn">发送</button>
+        </div>
+
+        <!-- 消息容器（下方） -->
+        <div id="chat-container">
+            {% for msg in messages %}
+                <div class="message">{{ msg }}</div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+        document.getElementById("send-btn").addEventListener("click", function() {
+            let message = document.getElementById("message-input").value;
+            if (!message) return;
+
+            fetch("/send-message", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ message: message })
+            })
+            .then(response => response.json())
+            .then(data => {
+                let chatContainer = document.getElementById("chat-container");
+                let newMessage = document.createElement("div");
+                newMessage.classList.add("message");
+                newMessage.textContent = message;
+
+                chatContainer.insertBefore(newMessage, chatContainer.firstChild);  // 插入到最上方
+                document.getElementById("message-input").value = "";  // 清空输入框
             });
-
-            let result = await response.json();
-            if (!result.error) {
-                // Reload page to update messages
-                window.location.reload();
-            }
-        }
+        });
     </script>
-</head>
-<body>
-    <h1>Message Board</h1>
-    
-    <!-- Message Input -->
-    <input type="text" id="messageInput" placeholder="Type a message..." />
-    <button onclick="sendMessage()">Send</button>
 
-    <h2>Messages:</h2>
-    <ul>
-        {% for msg in messages[::-1] %}  <!-- Reverse the message order -->
-            <li>{{ msg }}</li>
-        {% endfor %}
-    </ul>
 </body>
 </html>
